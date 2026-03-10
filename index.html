@@ -6,6 +6,52 @@
   <title>Equipment Deployments</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    .login-overlay {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      background: #f0f2f5;
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-box {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .login-box h1 { font-size: 1.4rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+    .login-box p { font-size: 0.875rem; color: #64748b; margin-bottom: 28px; }
+    .login-box input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #0f172a;
+      margin-bottom: 12px;
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+    .login-box input:focus { outline: 2px solid #6366f1; border-color: transparent; }
+    .login-box button {
+      width: 100%;
+      padding: 11px;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .login-box button:hover { background: #4f46e5; }
+    .login-error { color: #dc2626; font-size: 0.8rem; margin-top: 8px; display: none; }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -346,6 +392,16 @@
 </head>
 <body>
 
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <h1>Equipment Deployments</h1>
+    <p>Enter the password to continue</p>
+    <input type="password" id="login-input" placeholder="Password" onkeydown="if(event.key==='Enter') tryLogin()" />
+    <button onclick="tryLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+  </div>
+</div>
+
 <header>
   <div>
     <h1>Equipment Deployments</h1>
@@ -488,6 +544,24 @@
       }
     ]
   };
+
+  const PASSWORD = "Saronic2026!";
+
+  function tryLogin() {
+    const val = document.getElementById("login-input").value;
+    if (val === PASSWORD) {
+      sessionStorage.setItem("auth", "1");
+      document.getElementById("login-overlay").style.display = "none";
+    } else {
+      document.getElementById("login-error").style.display = "block";
+      document.getElementById("login-input").value = "";
+      document.getElementById("login-input").focus();
+    }
+  }
+
+  if (sessionStorage.getItem("auth") === "1") {
+    document.getElementById("login-overlay").style.display = "none";
+  }
 
   const SUPABASE_URL = "https://bmjmhfgnusalemqwkgjr.supabase.co";
   const SUPABASE_KEY = "sb_publishable_AzCsAPKkZlO0wskH0wxsOg_A82WQnSs";
