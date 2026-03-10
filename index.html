@@ -898,7 +898,7 @@
 
         return `
           <tr data-section="${section.id}" data-row="${i}">
-            <td><span class="editable task-id cell-task" contenteditable="true" spellcheck="false">${row.task || ""}</span></td>
+            <td><span class="editable outlined task-id cell-task" contenteditable="true" spellcheck="false">${row.task || ""}</span></td>
             <td><span class="editable cell-name" contenteditable="true" spellcheck="false">${row.name || ""}</span></td>
             <td><select class="progress-select cell-progress" data-value="${row.progress || ""}" onchange="this.dataset.value=this.value; updateProgress('${section.id}', ${i}, this.value)">
               <option value="" ${!row.progress ? "selected" : ""}>Not Started</option>
