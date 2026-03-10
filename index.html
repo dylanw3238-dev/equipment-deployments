@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Equipment Deployments</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -488,12 +489,21 @@
     ]
   };
 
+  const SUPABASE_URL = "https://bmjmhfgnusalemqwkgjr.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_AzCsAPKkZlO0wskH0wxsOg_A82WQnSs";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
   let data;
   let pendingSectionId = null;
 
-  function loadData() {
-    const saved = localStorage.getItem("deployments-data");
-    data = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+  async function loadData() {
+    const { data: row } = await sb.from("app_data").select("data").eq("id", 1).single();
+    if (row) {
+      data = row.data;
+    } else {
+      data = JSON.parse(JSON.stringify(defaultData));
+      await sb.from("app_data").insert({ id: 1, data });
+    }
     // Migrate: add Microsoft Surface Pro if missing
     if (!data.sections.find(s => s.id === "surface-pro")) {
       data.sections.push({ id: "surface-pro", title: "Microsoft Surface Pro", rows: [] });
@@ -509,9 +519,9 @@
     }
   }
 
-  function saveData() {
+  async function saveData() {
     collectEdits();
-    localStorage.setItem("deployments-data", JSON.stringify(data));
+    await sb.from("app_data").upsert({ id: 1, data, updated_at: new Date().toISOString() });
     const btn = document.querySelector(".save-btn");
     btn.textContent = "Saved!";
     btn.classList.add("saved");
@@ -683,10 +693,10 @@
     if (e.key === "Escape") closeModal();
   });
 
-  loadData();
-  localStorage.setItem("deployments-data", JSON.stringify(data)); // persist any migrations
-  render();
-  updateStats();
+  loadData().then(() => {
+    render();
+    updateStats();
+  });
 </script>
 </body>
 </html>
