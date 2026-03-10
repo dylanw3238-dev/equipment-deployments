@@ -1231,6 +1231,9 @@
 
   function deleteRow(sectionId, rowIndex) {
     const section = data.sections.find(s => s.id === sectionId);
+    const row = section.rows[rowIndex];
+    const name = row.name || row.task || "this entry";
+    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
     section.rows.splice(rowIndex, 1);
     render();
     updateStats();
