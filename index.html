@@ -1101,6 +1101,16 @@
     }).join("");
   }
 
+  function deleteNotes(sectionId, rowIndex, noteId) {
+    data.sections.find(s => s.id === sectionId).rows[rowIndex].notes = "";
+    const notesTr = document.getElementById(noteId);
+    notesTr.querySelector("textarea").value = "";
+    notesTr.classList.add("hidden");
+    const rowTr = document.querySelector(`[data-section="${sectionId}"][data-row="${rowIndex}"]`);
+    rowTr.classList.remove("has-notes-row");
+    rowTr.querySelector(".notes-btn").classList.remove("has-notes");
+  }
+
   function toggleNotes(noteId) {
     const row = document.getElementById(noteId);
     row.classList.toggle("hidden");
@@ -1231,9 +1241,13 @@
           </tr>
           <tr class="notes-row ${row.notes ? '' : 'hidden'}" id="${noteId}">
             <td colspan="9">
-              <textarea class="notes-textarea" placeholder="Add notes here…"
-                onchange="data.sections.find(s=>s.id==='${section.id}').rows[${i}].notes=this.value; document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\'] .notes-btn').classList.toggle('has-notes', this.value.length > 0)"
-              >${row.notes || ""}</textarea>
+              <div style="display:flex;gap:8px;align-items:flex-start;">
+                <textarea class="notes-textarea" placeholder="Add notes here… (Enter to save, Shift+Enter for new line)"
+                  onchange="data.sections.find(s=>s.id==='${section.id}').rows[${i}].notes=this.value; document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\']').classList.toggle('has-notes-row',this.value.length>0); document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\'] .notes-btn').classList.toggle('has-notes',this.value.length>0)"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const ta=this;data.sections.find(s=>s.id==='${section.id}').rows[${i}].notes=ta.value;document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\']').classList.toggle('has-notes-row',ta.value.length>0);document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\'] .notes-btn').classList.toggle('has-notes',ta.value.length>0);toggleNotes('${noteId}');}"
+                >${row.notes || ""}</textarea>
+                <button onclick="deleteNotes('${section.id}',${i},'${noteId}')" title="Delete notes" style="background:#1e3a5f;border:1px solid #2d4a6e;color:#ef4444;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:0.8rem;white-space:nowrap;flex-shrink:0;transition:all 0.15s;" onmouseover="this.style.background='#3f1a1a'" onmouseout="this.style.background='#1e3a5f'">🗑 Delete</button>
+              </div>
             </td>
           </tr>`;
       }).join("");
