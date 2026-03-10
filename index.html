@@ -274,7 +274,68 @@
     }
     .delete-row:hover { background: #fee2e2; color: #dc2626; }
 
+    .complete-btn {
+      background: none;
+      border: 1px solid #bbf7d0;
+      color: #16a34a;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 6px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .complete-btn:hover { background: #dcfce7; }
+
+    .restore-btn {
+      background: none;
+      border: 1px solid #c7d2fe;
+      color: #6366f1;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .restore-btn:hover { background: #ede9fe; }
+
     .row-actions { display: flex; align-items: center; gap: 4px; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      max-width: 1100px;
+      margin: 0 auto 28px;
+      background: white;
+      border-radius: 10px;
+      padding: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: none;
+      color: #64748b;
+      transition: all 0.15s;
+    }
+    .tab-btn.active { background: #6366f1; color: white; }
+    .tab-btn:not(.active):hover { background: #f1f5f9; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .completed-date {
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
 
     .move-select {
       border: 1px solid #e2e8f0;
@@ -410,6 +471,12 @@
   <button class="save-btn" onclick="saveData()">Save Changes</button>
 </header>
 
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('active')">Active Deployments</button>
+  <button class="tab-btn" onclick="switchTab('completed')">Completed</button>
+</div>
+
+<div id="page-active" class="page active">
 <div class="stats">
   <div class="stat-card">
     <div class="label">Total Devices</div>
@@ -430,6 +497,29 @@
 </div>
 
 <div id="sections-container"></div>
+</div>
+
+<div id="page-completed" class="page">
+  <div class="section" style="max-width:1100px;margin:0 auto;">
+    <div class="section-header">
+      <div class="section-title">Completed Deployments <span id="completed-count" style="background:#e2e8f0;color:#475569;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px;">0</span></div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Service Task</th>
+          <th>User Name</th>
+          <th>Device Type</th>
+          <th>Progress</th>
+          <th>Asset Tag</th>
+          <th>Completed On</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="completed-tbody"></tbody>
+    </table>
+  </div>
+</div>
 
 <!-- Add Row Modal -->
 <div class="modal-overlay" id="modal">
@@ -569,6 +659,16 @@
 
   let data;
   let pendingSectionId = null;
+  let currentTab = "active";
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll(".tab-btn").forEach((b, i) => {
+      b.classList.toggle("active", (i === 0 && tab === "active") || (i === 1 && tab === "completed"));
+    });
+    document.getElementById("page-active").classList.toggle("active", tab === "active");
+    document.getElementById("page-completed").classList.toggle("active", tab === "completed");
+  }
 
   async function loadData() {
     const { data: row } = await sb.from("app_data").select("data").eq("id", 1).single();
@@ -578,6 +678,8 @@
       data = JSON.parse(JSON.stringify(defaultData));
       await sb.from("app_data").insert({ id: 1, data });
     }
+    // Migrate: add completed array if missing
+    if (!data.completed) data.completed = [];
     // Migrate: add Microsoft Surface Pro if missing
     if (!data.sections.find(s => s.id === "surface-pro")) {
       data.sections.push({ id: "surface-pro", title: "Microsoft Surface Pro", rows: [] });
@@ -613,6 +715,54 @@
         row.asset    = tr.querySelector(".cell-asset").textContent.trim();
       });
     });
+  }
+
+  function completeRow(sectionId, rowIndex) {
+    collectEdits();
+    const section = data.sections.find(s => s.id === sectionId);
+    const [row] = section.rows.splice(rowIndex, 1);
+    row.deviceType = section.title;
+    row.completedAt = new Date().toISOString();
+    data.completed.push(row);
+    render();
+    renderCompleted();
+    updateStats();
+  }
+
+  function restoreRow(completedIndex) {
+    const [row] = data.completed.splice(completedIndex, 1);
+    const deviceType = row.deviceType;
+    delete row.deviceType;
+    delete row.completedAt;
+    const section = data.sections.find(s => s.title === deviceType) || data.sections[0];
+    section.rows.push(row);
+    render();
+    renderCompleted();
+    updateStats();
+  }
+
+  function renderCompleted() {
+    const tbody = document.getElementById("completed-tbody");
+    document.getElementById("completed-count").textContent = data.completed.length;
+    if (!data.completed.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:24px;font-style:italic;">No completed deployments yet</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.completed.map((row, i) => {
+      const date = row.completedAt ? new Date(row.completedAt).toLocaleDateString() : "—";
+      const progressHtml = row.progress
+        ? `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.78rem;font-weight:500;background:#ede9fe;color:#7c3aed;">${row.progress}</span>`
+        : `<span style="color:#cbd5e1;font-style:italic;font-size:0.8rem;">—</span>`;
+      return `<tr>
+        <td><span style="font-family:monospace;font-size:0.8rem;color:#6366f1;font-weight:600;">${row.task || ""}</span></td>
+        <td>${row.name || ""}</td>
+        <td><span style="font-size:0.78rem;font-weight:600;color:#475569;">${row.deviceType || ""}</span></td>
+        <td>${progressHtml}</td>
+        <td>${row.asset || "—"}</td>
+        <td class="completed-date">${date}</td>
+        <td><button class="restore-btn" onclick="restoreRow(${i})">Restore</button></td>
+      </tr>`;
+    }).join("");
   }
 
   function moveRow(fromSectionId, rowIndex, toSectionId) {
@@ -718,6 +868,7 @@
                   <option value="${section.id}" disabled selected>${section.title}</option>
                   ${data.sections.filter(s => s.id !== section.id).map(s => `<option value="${s.id}">${s.title}</option>`).join("")}
                 </select>
+                <button class="complete-btn" onclick="completeRow('${section.id}', ${i})">&#10003; Done</button>
                 <button class="delete-row" onclick="deleteRow('${section.id}', ${i})" title="Remove row">&#x2715;</button>
               </div>
             </td>
@@ -769,6 +920,7 @@
 
   loadData().then(() => {
     render();
+    renderCompleted();
     updateStats();
   });
 </script>
