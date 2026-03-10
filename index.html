@@ -637,11 +637,28 @@
 
   const PASSWORD = "Saronic2026!";
 
+  const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  let idleTimer;
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(logOut, IDLE_TIMEOUT);
+  }
+
+  function logOut() {
+    sessionStorage.removeItem("auth");
+    document.getElementById("login-overlay").style.display = "flex";
+    document.getElementById("login-input").value = "";
+    document.getElementById("login-error").style.display = "none";
+    clearTimeout(idleTimer);
+  }
+
   function tryLogin() {
     const val = document.getElementById("login-input").value;
     if (val === PASSWORD) {
       sessionStorage.setItem("auth", "1");
       document.getElementById("login-overlay").style.display = "none";
+      resetIdleTimer();
     } else {
       document.getElementById("login-error").style.display = "block";
       document.getElementById("login-input").value = "";
@@ -651,7 +668,12 @@
 
   if (sessionStorage.getItem("auth") === "1") {
     document.getElementById("login-overlay").style.display = "none";
+    resetIdleTimer();
   }
+
+  ["mousemove", "mousedown", "keydown", "touchstart", "scroll"].forEach(evt =>
+    document.addEventListener(evt, resetIdleTimer, { passive: true })
+  );
 
   const SUPABASE_URL = "https://bmjmhfgnusalemqwkgjr.supabase.co";
   const SUPABASE_KEY = "sb_publishable_AzCsAPKkZlO0wskH0wxsOg_A82WQnSs";
