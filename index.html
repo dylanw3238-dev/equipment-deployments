@@ -16,23 +16,24 @@
       justify-content: center;
     }
     .login-box {
-      background: white;
+      background: #1a2d4a;
       border-radius: 16px;
       padding: 40px;
       width: 100%;
       max-width: 380px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
       text-align: center;
     }
-    .login-box h1 { font-size: 1.4rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
-    .login-box p { font-size: 0.875rem; color: #64748b; margin-bottom: 28px; }
+    .login-box h1 { font-size: 1.4rem; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+    .login-box p { font-size: 0.875rem; color: #94a3b8; margin-bottom: 28px; }
     .login-box input {
       width: 100%;
       padding: 10px 14px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #2d4a6e;
       border-radius: 8px;
       font-size: 0.95rem;
-      color: #0f172a;
+      color: #e2e8f0;
+      background: #162438;
       margin-bottom: 12px;
       text-align: center;
       letter-spacing: 0.05em;
@@ -57,7 +58,7 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #0f1e36;
-      color: #1a1a2e;
+      color: #e2e8f0;
       padding: 40px 24px;
     }
 
@@ -71,8 +72,8 @@
       gap: 12px;
     }
 
-    header h1 { font-size: 1.75rem; font-weight: 700; color: #0f172a; }
-    header p { margin-top: 4px; font-size: 0.9rem; color: #64748b; }
+    header h1 { font-size: 1.75rem; font-weight: 700; color: #f1f5f9; }
+    header p { margin-top: 4px; font-size: 0.9rem; color: #94a3b8; }
 
     .save-btn {
       background: #6366f1;
@@ -97,25 +98,25 @@
     }
 
     .stat-card {
-      background: white;
+      background: #1a2d4a;
       border-radius: 12px;
       padding: 16px 24px;
       flex: 1;
       min-width: 160px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
     .stat-card .label {
       font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #94a3b8;
+      color: #64748b;
       margin-bottom: 6px;
     }
     .stat-card .value {
       font-size: 1.75rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #f1f5f9;
     }
 
     .section {
@@ -136,34 +137,34 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #64748b;
+      color: #94a3b8;
     }
 
     .add-row-btn {
-      background: white;
-      border: 1px solid #e2e8f0;
+      background: #1a2d4a;
+      border: 1px solid #2d4a6e;
       border-radius: 8px;
       padding: 6px 14px;
       font-size: 0.78rem;
       font-weight: 600;
-      color: #6366f1;
+      color: #818cf8;
       cursor: pointer;
       transition: all 0.15s;
     }
-    .add-row-btn:hover { background: #f5f3ff; border-color: #c7d2fe; }
+    .add-row-btn:hover { background: #1e3a5f; border-color: #6366f1; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
+      background: #1a2d4a;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
     thead tr {
-      background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
+      background: #162438;
+      border-bottom: 1px solid #2d4a6e;
     }
 
     thead th {
@@ -173,20 +174,20 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #94a3b8;
+      color: #64748b;
     }
 
     tbody tr {
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid #1e3a5f;
       transition: background 0.15s;
     }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: #f8fafc; }
+    tbody tr:hover { background: #1e3a5f; }
 
     td {
       padding: 10px 16px;
       font-size: 0.875rem;
-      color: #334155;
+      color: #cbd5e1;
     }
 
     /* Editable cells */
@@ -198,20 +199,20 @@
       display: inline-block;
       transition: background 0.15s;
     }
-    .editable:hover { background: #f1f5f9; }
+    .editable:hover { background: #1e3a5f; }
     .editable:focus {
       outline: 2px solid #6366f1;
-      background: white;
+      background: #162438;
     }
 
     .editable.outlined {
-      border: 1px solid #e2e8f0;
+      border: 1px solid #2d4a6e;
       border-radius: 6px;
       padding: 4px 8px;
       min-width: 80px;
     }
-    .editable.outlined:hover { background: #f8fafc; border-color: #cbd5e1; }
-    .editable.outlined:focus { outline: 2px solid #6366f1; border-color: transparent; background: white; }
+    .editable.outlined:hover { background: #1e3a5f; border-color: #4a6a8a; }
+    .editable.outlined:focus { outline: 2px solid #6366f1; border-color: transparent; background: #162438; }
 
     .task-id {
       font-family: "SF Mono", "Fira Code", monospace;
@@ -257,8 +258,8 @@
     }
     .progress-select:focus { outline: 2px solid #6366f1; }
     .progress-select[data-value=""] {
-      background-color: #f1f5f9;
-      color: #94a3b8;
+      background-color: #162438;
+      color: #64748b;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
     }
     .progress-select[data-value="ready"] {
@@ -318,10 +319,10 @@
       gap: 4px;
       max-width: 1100px;
       margin: 0 auto 28px;
-      background: white;
+      background: #1a2d4a;
       border-radius: 10px;
       padding: 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
       width: fit-content;
     }
     .tab-btn {
@@ -336,7 +337,7 @@
       transition: all 0.15s;
     }
     .tab-btn.active { background: #6366f1; color: white; }
-    .tab-btn:not(.active):hover { background: #f1f5f9; }
+    .tab-btn:not(.active):hover { background: #1e3a5f; color: #94a3b8; }
 
     .page { display: none; }
     .page.active { display: block; }
@@ -355,13 +356,13 @@
     }
 
     .move-select {
-      border: 1px solid #e2e8f0;
+      border: 1px solid #2d4a6e;
       border-radius: 6px;
       padding: 3px 22px 3px 7px;
       font-size: 0.75rem;
       font-weight: 500;
-      color: #64748b;
-      background: #f8fafc;
+      color: #94a3b8;
+      background: #162438;
       cursor: pointer;
       appearance: none;
       -webkit-appearance: none;
@@ -371,7 +372,7 @@
       transition: all 0.15s;
       max-width: 130px;
     }
-    .move-select:hover { border-color: #c7d2fe; background-color: #f5f3ff; color: #6366f1; }
+    .move-select:hover { border-color: #6366f1; background-color: #1e3a5f; color: #818cf8; }
     .move-select:focus { outline: 2px solid #6366f1; }
 
     /* Modal */
@@ -387,18 +388,18 @@
     .modal-overlay.open { display: flex; }
 
     .modal {
-      background: white;
+      background: #1a2d4a;
       border-radius: 16px;
       padding: 28px;
       width: 100%;
       max-width: 460px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     }
 
     .modal h2 {
       font-size: 1.1rem;
       font-weight: 700;
-      color: #0f172a;
+      color: #f1f5f9;
       margin-bottom: 20px;
     }
 
@@ -410,7 +411,7 @@
       display: block;
       font-size: 0.78rem;
       font-weight: 600;
-      color: #64748b;
+      color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       margin-bottom: 6px;
@@ -419,10 +420,11 @@
     .form-group input, .form-group select {
       width: 100%;
       padding: 9px 12px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #2d4a6e;
       border-radius: 8px;
       font-size: 0.875rem;
-      color: #0f172a;
+      color: #e2e8f0;
+      background: #162438;
       transition: border-color 0.15s;
     }
     .form-group input:focus, .form-group select:focus {
@@ -439,16 +441,16 @@
     }
 
     .btn-cancel {
-      background: #f1f5f9;
+      background: #162438;
       border: none;
       border-radius: 8px;
       padding: 9px 18px;
       font-size: 0.875rem;
       font-weight: 600;
-      color: #64748b;
+      color: #94a3b8;
       cursor: pointer;
     }
-    .btn-cancel:hover { background: #e2e8f0; }
+    .btn-cancel:hover { background: #1e3a5f; }
 
     .btn-add {
       background: #6366f1;
