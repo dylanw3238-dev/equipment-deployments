@@ -59,7 +59,69 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #0f1e36;
       color: #e2e8f0;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: #0a1628;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 50;
+      border-right: 1px solid #1a2d4a;
+    }
+
+    .sidebar-logo {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      padding: 0 20px 28px;
+      border-bottom: 1px solid #1a2d4a;
+      margin-bottom: 16px;
+      letter-spacing: 0.02em;
+    }
+
+    .sidebar-logo span { color: #6366f1; }
+
+    .sidebar-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #334155;
+      padding: 0 20px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+      margin: 1px 0;
+    }
+    .sidebar-item:hover { background: #1a2d4a; color: #cbd5e1; }
+    .sidebar-item.active { background: #1a2d4a; color: #818cf8; border-left-color: #6366f1; font-weight: 600; }
+    .sidebar-item .icon { font-size: 1rem; }
+
+    /* Main content offset for sidebar */
+    .main-content {
+      margin-left: 220px;
+      flex: 1;
       padding: 40px 24px;
+      min-width: 0;
     }
 
     header {
@@ -474,6 +536,19 @@
 
 <canvas id="confetti-canvas"></canvas>
 
+<nav class="sidebar">
+  <div class="sidebar-logo">IT <span>Deployments</span></div>
+  <div class="sidebar-label">Views</div>
+  <div class="sidebar-item active" id="nav-ticket" onclick="switchApp('ticket')">
+    <span class="icon">🎫</span> Ticket Deployments
+  </div>
+  <div class="sidebar-item" id="nav-newhire" onclick="switchApp('newhire')">
+    <span class="icon">👤</span> New Hire Equipment
+  </div>
+</nav>
+
+<div class="main-content">
+
 <div class="login-overlay" id="login-overlay">
   <div class="login-box">
     <h1>Equipment Deployments</h1>
@@ -712,9 +787,36 @@
   const SUPABASE_KEY = "sb_publishable_AzCsAPKkZlO0wskH0wxsOg_A82WQnSs";
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  const defaultNewHireData = {
+    sections: [
+      { id: "nh-dell-pro-14",  title: "Dell Pro 14",            rows: [] },
+      { id: "nh-dell-rugged",  title: "Dell Rugged",            rows: [] },
+      { id: "nh-dell-7680",    title: "Dell 7680",              rows: [] },
+      { id: "nh-macbook-air",  title: "MacBook Air",            rows: [] },
+      { id: "nh-macbook-pro",  title: "MacBook Pro",            rows: [] },
+      { id: "nh-surface-pro",  title: "Microsoft Surface Pro",  rows: [] },
+    ],
+    completed: []
+  };
+
   let data;
+  let currentApp = "ticket"; // "ticket" | "newhire"
   let pendingSectionId = null;
   let currentTab = "active";
+
+  async function switchApp(app) {
+    await saveData(true);
+    currentApp = app;
+    document.getElementById("nav-ticket").classList.toggle("active", app === "ticket");
+    document.getElementById("nav-newhire").classList.toggle("active", app === "newhire");
+    document.querySelector("header h1").textContent = app === "ticket" ? "Ticket Deployments" : "New Hire Equipment";
+    await loadData();
+    currentTab = "active";
+    switchTab("active");
+    render();
+    renderCompleted();
+    updateStats();
+  }
 
   function switchTab(tab) {
     currentTab = tab;
@@ -726,37 +828,40 @@
   }
 
   async function loadData() {
-    const { data: row } = await sb.from("app_data").select("data").eq("id", 1).single();
+    const dbId = currentApp === "ticket" ? 1 : 2;
+    const fallback = currentApp === "ticket" ? defaultData : defaultNewHireData;
+    const { data: row } = await sb.from("app_data").select("data").eq("id", dbId).single();
     if (row) {
       data = row.data;
     } else {
-      data = JSON.parse(JSON.stringify(defaultData));
-      await sb.from("app_data").insert({ id: 1, data });
+      data = JSON.parse(JSON.stringify(fallback));
+      await sb.from("app_data").insert({ id: dbId, data });
     }
-    // Migrate: add completed array if missing
     if (!data.completed) data.completed = [];
-    // Migrate: add Microsoft Surface Pro if missing
-    if (!data.sections.find(s => s.id === "surface-pro")) {
-      data.sections.push({ id: "surface-pro", title: "Microsoft Surface Pro", rows: [] });
-    }
-    // Migrate: replace old apple-macbook section with MacBook Air + MacBook Pro
-    const oldIdx = data.sections.findIndex(s => s.id === "apple-macbook");
-    if (oldIdx !== -1) {
-      const oldRows = data.sections[oldIdx].rows;
-      data.sections.splice(oldIdx, 1,
-        { id: "macbook-air", title: "MacBook Air", rows: oldRows },
-        { id: "macbook-pro", title: "MacBook Pro", rows: [] }
-      );
+    if (currentApp === "ticket") {
+      if (!data.sections.find(s => s.id === "surface-pro"))
+        data.sections.push({ id: "surface-pro", title: "Microsoft Surface Pro", rows: [] });
+      const oldIdx = data.sections.findIndex(s => s.id === "apple-macbook");
+      if (oldIdx !== -1) {
+        const oldRows = data.sections[oldIdx].rows;
+        data.sections.splice(oldIdx, 1,
+          { id: "macbook-air", title: "MacBook Air", rows: oldRows },
+          { id: "macbook-pro", title: "MacBook Pro", rows: [] }
+        );
+      }
     }
   }
 
-  async function saveData() {
+  async function saveData(silent = false) {
     collectEdits();
-    await sb.from("app_data").upsert({ id: 1, data, updated_at: new Date().toISOString() });
-    const btn = document.querySelector(".save-btn");
-    btn.textContent = "Saved!";
-    btn.classList.add("saved");
-    setTimeout(() => { btn.textContent = "Save Changes"; btn.classList.remove("saved"); }, 2000);
+    const dbId = currentApp === "ticket" ? 1 : 2;
+    await sb.from("app_data").upsert({ id: dbId, data, updated_at: new Date().toISOString() });
+    if (!silent) {
+      const btn = document.querySelector(".save-btn");
+      btn.textContent = "Saved!";
+      btn.classList.add("saved");
+      setTimeout(() => { btn.textContent = "Save Changes"; btn.classList.remove("saved"); }, 2000);
+    }
   }
 
   function collectEdits() {
@@ -1032,5 +1137,6 @@
     updateStats();
   });
 </script>
+</div><!-- end main-content -->
 </body>
 </html>
