@@ -204,6 +204,15 @@
       background: white;
     }
 
+    .editable.outlined {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 4px 8px;
+      min-width: 80px;
+    }
+    .editable.outlined:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .editable.outlined:focus { outline: 2px solid #6366f1; border-color: transparent; background: white; }
+
     .task-id {
       font-family: "SF Mono", "Fira Code", monospace;
       font-size: 0.8rem;
@@ -897,7 +906,7 @@
               <option value="enroll-eng@" ${row.progress === "enroll-eng@" ? "selected" : ""}>enroll-eng@</option>
               <option value="ready" ${row.progress === "ready" ? "selected" : ""}>Ready</option>
             </select></td>
-            <td><span class="editable cell-asset" contenteditable="true" spellcheck="false">${row.asset || ""}</span></td>
+            <td><span class="editable outlined cell-asset" contenteditable="true" spellcheck="false">${row.asset || ""}</span></td>
             <td><select class="progress-select cell-technician" onchange="data.sections.find(s=>s.id==='${section.id}').rows[${i}].technician=this.value">
               <option value="" ${!row.technician ? "selected" : ""}>Unassigned</option>
               <option value="Dylan Walker"      ${row.technician === "Dylan Walker"      ? "selected" : ""}>Dylan Walker</option>
