@@ -420,6 +420,42 @@
 
     .row-actions { display: flex; align-items: center; gap: 4px; }
 
+    .notes-btn {
+      background: none;
+      border: 1px solid #2d4a6e;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .notes-btn:hover { background: #1e3a5f; color: #94a3b8; border-color: #4a6a8a; }
+    .notes-btn.has-notes { border-color: #6366f1; color: #818cf8; }
+
+    .notes-row td {
+      padding: 0 16px 10px 16px;
+      background: #162438;
+    }
+    .notes-row.hidden { display: none; }
+
+    .notes-textarea {
+      width: 100%;
+      background: #0f1e36;
+      border: 1px solid #2d4a6e;
+      border-radius: 8px;
+      color: #cbd5e1;
+      font-size: 0.82rem;
+      font-family: inherit;
+      padding: 8px 12px;
+      resize: vertical;
+      min-height: 60px;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    .notes-textarea:focus { border-color: #6366f1; }
+    .notes-textarea::placeholder { color: #334155; }
+
     /* Tabs */
     .tabs {
       display: flex;
@@ -948,6 +984,8 @@
         row.progress    = tr.querySelector(".cell-progress").value;
         row.asset       = tr.querySelector(".cell-asset").textContent.trim();
         row.technician  = tr.querySelector(".cell-technician").value;
+        const notesTr = document.getElementById(`notes-${section.id}-${i}`);
+        if (notesTr) row.notes = notesTr.querySelector("textarea").value;
       });
     });
   }
@@ -1041,6 +1079,14 @@
     }).join("");
   }
 
+  function toggleNotes(noteId) {
+    const row = document.getElementById(noteId);
+    row.classList.toggle("hidden");
+    if (!row.classList.contains("hidden")) {
+      row.querySelector("textarea").focus();
+    }
+  }
+
   function moveRow(fromSectionId, rowIndex, toSectionId) {
     if (fromSectionId === toSectionId) return;
     collectEdits();
@@ -1127,6 +1173,7 @@
           ? `<span class="progress-tag">${row.progress}</span>`
           : `<span class="empty">—</span>`;
 
+        const noteId = `notes-${section.id}-${i}`;
         return `
           <tr data-section="${section.id}" data-row="${i}">
             <td><span class="editable outlined task-id cell-task" contenteditable="true" spellcheck="false">${row.task || ""}</span></td>
@@ -1154,9 +1201,17 @@
                   <option value="${section.id}" disabled selected>${section.title}</option>
                   ${data.sections.filter(s => s.id !== section.id).map(s => `<option value="${s.id}">${s.title}</option>`).join("")}
                 </select>
+                <button class="notes-btn ${row.notes ? 'has-notes' : ''}" onclick="toggleNotes('${noteId}')" title="Notes">📝</button>
                 <button class="complete-btn" onclick="completeRow('${section.id}', ${i})">&#10003; Done</button>
                 <button class="delete-row" onclick="deleteRow('${section.id}', ${i})" title="Remove row">&#x2715;</button>
               </div>
+            </td>
+          </tr>
+          <tr class="notes-row ${row.notes ? '' : 'hidden'}" id="${noteId}">
+            <td colspan="9">
+              <textarea class="notes-textarea" placeholder="Add notes here…"
+                onchange="data.sections.find(s=>s.id==='${section.id}').rows[${i}].notes=this.value; document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\'] .notes-btn').classList.toggle('has-notes', this.value.length > 0)"
+              >${row.notes || ""}</textarea>
             </td>
           </tr>`;
       }).join("");
