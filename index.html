@@ -510,6 +510,7 @@
           <th>Service Task</th>
           <th>User Name</th>
           <th>Device Type</th>
+          <th>Technician</th>
           <th>Progress</th>
           <th>Asset Tag</th>
           <th>Completed On</th>
@@ -545,6 +546,17 @@
     <div class="form-group">
       <label>Asset Tag</label>
       <input type="text" id="input-asset" placeholder="e.g. 2560" />
+    </div>
+    <div class="form-group">
+      <label>Technician</label>
+      <select id="input-technician">
+        <option value="">Unassigned</option>
+        <option value="Dylan Walker">Dylan Walker</option>
+        <option value="Luis Cerda">Luis Cerda</option>
+        <option value="Alexander Vise">Alexander Vise</option>
+        <option value="Alex Diaz">Alex Diaz</option>
+        <option value="Jonathan Alesandro">Jonathan Alesandro</option>
+      </select>
     </div>
     <div class="form-group">
       <label>Assigned to User</label>
@@ -733,8 +745,9 @@
         if (!tr) return;
         row.task     = tr.querySelector(".cell-task").textContent.trim();
         row.name     = tr.querySelector(".cell-name").textContent.trim();
-        row.progress = tr.querySelector(".cell-progress").value;
-        row.asset    = tr.querySelector(".cell-asset").textContent.trim();
+        row.progress    = tr.querySelector(".cell-progress").value;
+        row.asset       = tr.querySelector(".cell-asset").textContent.trim();
+        row.technician  = tr.querySelector(".cell-technician").value;
       });
     });
   }
@@ -779,6 +792,7 @@
         <td><span style="font-family:monospace;font-size:0.8rem;color:#6366f1;font-weight:600;">${row.task || ""}</span></td>
         <td>${row.name || ""}</td>
         <td><span style="font-size:0.78rem;font-weight:600;color:#475569;">${row.deviceType || ""}</span></td>
+        <td>${row.technician || "<span style='color:#cbd5e1;font-style:italic;font-size:0.8rem;'>—</span>"}</td>
         <td>${progressHtml}</td>
         <td>${row.asset || "—"}</td>
         <td class="completed-date">${date}</td>
@@ -826,6 +840,7 @@
     document.getElementById("input-name").value = "";
     document.getElementById("input-progress").value = "";
     document.getElementById("input-asset").value = "";
+    document.getElementById("input-technician").value = "";
     document.getElementById("input-assigned").value = "false";
     document.getElementById("input-script").value = "false";
     document.getElementById("modal").classList.add("open");
@@ -844,6 +859,7 @@
       name:     document.getElementById("input-name").value.trim(),
       progress: document.getElementById("input-progress").value.trim(),
       asset:    document.getElementById("input-asset").value.trim(),
+      technician: document.getElementById("input-technician").value,
       assigned: document.getElementById("input-assigned").value === "true",
       script:   document.getElementById("input-script").value === "true",
     });
@@ -882,6 +898,14 @@
               <option value="ready" ${row.progress === "ready" ? "selected" : ""}>Ready</option>
             </select></td>
             <td><span class="editable cell-asset" contenteditable="true" spellcheck="false">${row.asset || ""}</span></td>
+            <td><select class="progress-select cell-technician" onchange="data.sections.find(s=>s.id==='${section.id}').rows[${i}].technician=this.value">
+              <option value="" ${!row.technician ? "selected" : ""}>Unassigned</option>
+              <option value="Dylan Walker"      ${row.technician === "Dylan Walker"      ? "selected" : ""}>Dylan Walker</option>
+              <option value="Luis Cerda"        ${row.technician === "Luis Cerda"        ? "selected" : ""}>Luis Cerda</option>
+              <option value="Alexander Vise"    ${row.technician === "Alexander Vise"    ? "selected" : ""}>Alexander Vise</option>
+              <option value="Alex Diaz"         ${row.technician === "Alex Diaz"         ? "selected" : ""}>Alex Diaz</option>
+              <option value="Jonathan Alesandro"${row.technician === "Jonathan Alesandro"? "selected" : ""}>Jonathan Alesandro</option>
+            </select></td>
             <td>${badgeHtml(section.id, i, "assigned", row.assigned)}</td>
             <td>${badgeHtml(section.id, i, "script", row.script)}</td>
             <td>
@@ -909,6 +933,7 @@
               <th>User Name</th>
               <th>Progress</th>
               <th>Asset Tag</th>
+              <th>Technician</th>
               <th>Assigned to User</th>
               <th>Script Ran</th>
               <th></th>
