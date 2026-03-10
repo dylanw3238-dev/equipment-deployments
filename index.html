@@ -461,8 +461,49 @@
     }
     .notes-row.hidden { display: none; }
 
+    .notes-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .note-card {
+      background: #0f1e36;
+      border: 1px solid #2d4a6e;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .note-card-body { flex: 1; }
+    .note-card-text { font-size: 0.85rem; color: #cbd5e1; white-space: pre-wrap; line-height: 1.5; }
+    .note-card-time { font-size: 0.72rem; color: #334155; margin-top: 4px; }
+
+    .note-delete-btn {
+      background: none;
+      border: none;
+      color: #334155;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .note-delete-btn:hover { color: #ef4444; background: #3f1a1a; }
+
+    .notes-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
     .notes-textarea {
-      width: 100%;
+      flex: 1;
       background: #0f1e36;
       border: 1px solid #2d4a6e;
       border-radius: 8px;
@@ -470,13 +511,29 @@
       font-size: 0.82rem;
       font-family: inherit;
       padding: 8px 12px;
-      resize: vertical;
-      min-height: 60px;
-      transition: border-color 0.15s;
+      resize: none;
+      height: 38px;
+      transition: border-color 0.15s, height 0.15s;
       outline: none;
+      line-height: 1.4;
     }
-    .notes-textarea:focus { border-color: #6366f1; }
+    .notes-textarea:focus { border-color: #6366f1; height: 70px; }
     .notes-textarea::placeholder { color: #334155; }
+
+    .note-add-btn {
+      background: #6366f1;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+      height: 38px;
+    }
+    .note-add-btn:hover { background: #4f46e5; }
 
     /* Tabs */
     .tabs {
@@ -1006,8 +1063,7 @@
         row.progress    = tr.querySelector(".cell-progress").value;
         row.asset       = tr.querySelector(".cell-asset").textContent.trim();
         row.technician  = tr.querySelector(".cell-technician").value;
-        const notesTr = document.getElementById(`notes-${section.id}-${i}`);
-        if (notesTr) row.notes = notesTr.querySelector("textarea").value;
+        // notes are managed directly via addNote/deleteNotes, no collect needed
       });
     });
   }
@@ -1101,14 +1157,45 @@
     }).join("");
   }
 
-  function deleteNotes(sectionId, rowIndex, noteId) {
-    data.sections.find(s => s.id === sectionId).rows[rowIndex].notes = "";
-    const notesTr = document.getElementById(noteId);
-    notesTr.querySelector("textarea").value = "";
-    notesTr.classList.add("hidden");
+  function addNote(sectionId, rowIndex, noteId) {
+    const ta = document.querySelector(`#${noteId} .notes-textarea`);
+    const text = ta.value.trim();
+    if (!text) return;
+    const row = data.sections.find(s => s.id === sectionId).rows[rowIndex];
+    if (!Array.isArray(row.notes)) row.notes = [];
+    row.notes.push({ text, addedAt: new Date().toISOString() });
+    ta.value = "";
+    refreshNotesFeed(sectionId, rowIndex, noteId);
+    updateNotesBtnState(sectionId, rowIndex, row.notes.length > 0);
+  }
+
+  function deleteNote(sectionId, rowIndex, noteIndex, noteId) {
+    const row = data.sections.find(s => s.id === sectionId).rows[rowIndex];
+    row.notes.splice(noteIndex, 1);
+    refreshNotesFeed(sectionId, rowIndex, noteId);
+    updateNotesBtnState(sectionId, rowIndex, row.notes.length > 0);
+  }
+
+  function updateNotesBtnState(sectionId, rowIndex, hasNotes) {
     const rowTr = document.querySelector(`[data-section="${sectionId}"][data-row="${rowIndex}"]`);
-    rowTr.classList.remove("has-notes-row");
-    rowTr.querySelector(".notes-btn").classList.remove("has-notes");
+    if (!rowTr) return;
+    rowTr.classList.toggle("has-notes-row", hasNotes);
+    rowTr.querySelector(".notes-btn").classList.toggle("has-notes", hasNotes);
+  }
+
+  function refreshNotesFeed(sectionId, rowIndex, noteId) {
+    const row = data.sections.find(s => s.id === sectionId).rows[rowIndex];
+    const notes = Array.isArray(row.notes) ? row.notes : [];
+    const feed = document.querySelector(`#${noteId} .notes-feed`);
+    if (!feed) return;
+    feed.innerHTML = notes.map((n, ni) => `
+      <div class="note-card">
+        <div class="note-card-body">
+          <div class="note-card-text">${n.text.replace(/</g,"&lt;")}</div>
+          <div class="note-card-time">${new Date(n.addedAt).toLocaleString()}</div>
+        </div>
+        <button class="note-delete-btn" onclick="deleteNote('${sectionId}',${rowIndex},${ni},'${noteId}')" title="Delete note">🗑</button>
+      </div>`).join("");
   }
 
   function toggleNotes(noteId) {
@@ -1206,8 +1293,11 @@
           : `<span class="empty">—</span>`;
 
         const noteId = `notes-${section.id}-${i}`;
+        const notesArr = Array.isArray(row.notes) ? row.notes : (row.notes ? [{text: row.notes, addedAt: new Date().toISOString()}] : []);
+        if (!Array.isArray(row.notes) && row.notes) row.notes = notesArr; // migrate string to array
+        const hasNotes = notesArr.length > 0;
         return `
-          <tr data-section="${section.id}" data-row="${i}" class="${row.notes ? 'has-notes-row' : ''}"">
+          <tr data-section="${section.id}" data-row="${i}" class="${hasNotes ? 'has-notes-row' : ''}"">
             <td><span class="editable outlined task-id cell-task" contenteditable="true" spellcheck="false">${row.task || ""}</span></td>
             <td><span class="editable cell-name" contenteditable="true" spellcheck="false">${row.name || ""}</span></td>
             <td><select class="progress-select cell-progress" data-value="${row.progress || ""}" onchange="this.dataset.value=this.value; updateProgress('${section.id}', ${i}, this.value)">
@@ -1233,20 +1323,28 @@
                   <option value="${section.id}" disabled selected>${section.title}</option>
                   ${data.sections.filter(s => s.id !== section.id).map(s => `<option value="${s.id}">${s.title}</option>`).join("")}
                 </select>
-                <button class="notes-btn ${row.notes ? 'has-notes' : ''}" onclick="toggleNotes('${noteId}')" title="Notes">📝</button>
+                <button class="notes-btn ${hasNotes ? 'has-notes' : ''}" onclick="toggleNotes('${noteId}')" title="Notes">📝</button>
                 <button class="complete-btn" onclick="completeRow('${section.id}', ${i})">&#10003; Done</button>
                 <button class="delete-row" onclick="deleteRow('${section.id}', ${i})" title="Remove row">&#x2715;</button>
               </div>
             </td>
           </tr>
-          <tr class="notes-row ${row.notes ? '' : 'hidden'}" id="${noteId}">
+          <tr class="notes-row ${hasNotes ? '' : 'hidden'}" id="${noteId}">
             <td colspan="9">
-              <div style="display:flex;gap:8px;align-items:flex-start;">
-                <textarea class="notes-textarea" placeholder="Add notes here… (Enter to save, Shift+Enter for new line)"
-                  onchange="data.sections.find(s=>s.id==='${section.id}').rows[${i}].notes=this.value; document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\']').classList.toggle('has-notes-row',this.value.length>0); document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\'] .notes-btn').classList.toggle('has-notes',this.value.length>0)"
-                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const ta=this;data.sections.find(s=>s.id==='${section.id}').rows[${i}].notes=ta.value;document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\']').classList.toggle('has-notes-row',ta.value.length>0);document.querySelector('[data-section=\\'${section.id}\\'][data-row=\\'${i}\\'] .notes-btn').classList.toggle('has-notes',ta.value.length>0);toggleNotes('${noteId}');}"
-                >${row.notes || ""}</textarea>
-                <button onclick="deleteNotes('${section.id}',${i},'${noteId}')" title="Delete notes" style="background:#1e3a5f;border:1px solid #2d4a6e;color:#ef4444;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:0.8rem;white-space:nowrap;flex-shrink:0;transition:all 0.15s;" onmouseover="this.style.background='#3f1a1a'" onmouseout="this.style.background='#1e3a5f'">🗑 Delete</button>
+              <div class="notes-feed">
+                ${notesArr.map((n, ni) => `
+                  <div class="note-card">
+                    <div class="note-card-body">
+                      <div class="note-card-text">${n.text.replace(/</g,"&lt;")}</div>
+                      <div class="note-card-time">${new Date(n.addedAt).toLocaleString()}</div>
+                    </div>
+                    <button class="note-delete-btn" onclick="deleteNote('${section.id}',${i},${ni},'${noteId}')" title="Delete note">🗑</button>
+                  </div>`).join("")}
+              </div>
+              <div class="notes-input-row">
+                <textarea class="notes-textarea" placeholder="Add a note… (Enter to save, Shift+Enter for new line)"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addNote('${section.id}',${i},'${noteId}');}"></textarea>
+                <button class="note-add-btn" onclick="addNote('${section.id}',${i},'${noteId}')">Add</button>
               </div>
             </td>
           </tr>`;
