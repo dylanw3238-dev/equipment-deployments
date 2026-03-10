@@ -70,24 +70,59 @@
       background: #0a1628;
       display: flex;
       flex-direction: column;
-      padding: 32px 0;
+      padding: 0;
       position: fixed;
       top: 0; left: 0; bottom: 0;
       z-index: 50;
       border-right: 1px solid #1a2d4a;
+      transition: width 0.25s ease;
+      overflow: hidden;
+    }
+    .sidebar.collapsed { width: 64px; min-width: 64px; }
+
+    .sidebar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid #1a2d4a;
+      gap: 10px;
+      min-height: 72px;
     }
 
     .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .sidebar-logo svg { flex-shrink: 0; }
+    .sidebar-logo-text {
       font-size: 1rem;
       font-weight: 700;
       color: #f1f5f9;
-      padding: 0 20px 28px;
-      border-bottom: 1px solid #1a2d4a;
-      margin-bottom: 16px;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.06em;
+      opacity: 1;
+      transition: opacity 0.2s ease;
     }
+    .sidebar.collapsed .sidebar-logo-text { opacity: 0; width: 0; }
 
-    .sidebar-logo span { color: #6366f1; }
+    .sidebar-toggle {
+      background: none;
+      border: 1px solid #1a2d4a;
+      border-radius: 6px;
+      color: #64748b;
+      cursor: pointer;
+      padding: 4px 6px;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+    .sidebar-toggle:hover { background: #1a2d4a; color: #cbd5e1; }
+
+    .sidebar-nav { padding: 16px 0; flex: 1; }
 
     .sidebar-label {
       font-size: 0.65rem;
@@ -97,7 +132,11 @@
       color: #334155;
       padding: 0 20px;
       margin-bottom: 6px;
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity 0.2s;
     }
+    .sidebar.collapsed .sidebar-label { opacity: 0; }
 
     .sidebar-item {
       display: flex;
@@ -111,10 +150,14 @@
       transition: all 0.15s;
       border-left: 3px solid transparent;
       margin: 1px 0;
+      white-space: nowrap;
     }
     .sidebar-item:hover { background: #1a2d4a; color: #cbd5e1; }
     .sidebar-item.active { background: #1a2d4a; color: #818cf8; border-left-color: #6366f1; font-weight: 600; }
-    .sidebar-item .icon { font-size: 1rem; }
+    .sidebar-item .icon { font-size: 1.1rem; flex-shrink: 0; }
+    .sidebar-item-text { opacity: 1; transition: opacity 0.2s; }
+    .sidebar.collapsed .sidebar-item-text { opacity: 0; width: 0; overflow: hidden; }
+    .sidebar.collapsed .sidebar-item { padding: 10px 0; justify-content: center; }
 
     /* Main content offset for sidebar */
     .main-content {
@@ -122,7 +165,9 @@
       flex: 1;
       padding: 40px 24px;
       min-width: 0;
+      transition: margin-left 0.25s ease;
     }
+    .main-content.sidebar-collapsed { margin-left: 64px; }
 
     header {
       max-width: 1100px;
@@ -536,14 +581,24 @@
 
 <canvas id="confetti-canvas"></canvas>
 
-<nav class="sidebar">
-  <div class="sidebar-logo">IT <span>Deployments</span></div>
-  <div class="sidebar-label">Views</div>
-  <div class="sidebar-item active" id="nav-ticket" onclick="switchApp('ticket')">
-    <span class="icon">🎫</span> Ticket Deployments
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-top">
+    <div class="sidebar-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" fill="none" viewBox="0 0 120 160">
+        <path fill="#818cf8" d="M29.996 115H0V85L120 0 29.996 115ZM90.004 45H120v30L0 160 90.004 45Z"/>
+      </svg>
+      <span class="sidebar-logo-text">SARONIC</span>
+    </div>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">&#9776;</button>
   </div>
-  <div class="sidebar-item" id="nav-newhire" onclick="switchApp('newhire')">
-    <span class="icon">👤</span> New Hire Equipment
+  <div class="sidebar-nav">
+    <div class="sidebar-label">Views</div>
+    <div class="sidebar-item active" id="nav-ticket" onclick="switchApp('ticket')">
+      <span class="icon">🎫</span><span class="sidebar-item-text">Ticket Deployments</span>
+    </div>
+    <div class="sidebar-item" id="nav-newhire" onclick="switchApp('newhire')">
+      <span class="icon">👤</span><span class="sidebar-item-text">New Hire Equipment</span>
+    </div>
   </div>
 </nav>
 
@@ -560,9 +615,14 @@
 </div>
 
 <header>
-  <div>
-    <h1>Equipment Deployments</h1>
-    <p>Tracking device enrollment and local admin script status</p>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" fill="none" viewBox="0 0 120 160">
+      <path fill="#818cf8" d="M29.996 115H0V85L120 0 29.996 115ZM90.004 45H120v30L0 160 90.004 45Z"/>
+    </svg>
+    <div>
+      <h1 id="page-title">Ticket Deployments</h1>
+      <p>Tracking device enrollment and local admin script status</p>
+    </div>
   </div>
   <button class="save-btn" onclick="saveData()">Save Changes</button>
 </header>
@@ -745,6 +805,20 @@
 
   const PASSWORD = "Saronic2026!";
 
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const main = document.querySelector(".main-content");
+    sidebar.classList.toggle("collapsed");
+    main.classList.toggle("sidebar-collapsed");
+    localStorage.setItem("sidebar-collapsed", sidebar.classList.contains("collapsed"));
+  }
+
+  // Restore sidebar state
+  if (localStorage.getItem("sidebar-collapsed") === "true") {
+    document.getElementById("sidebar").classList.add("collapsed");
+    document.querySelector(".main-content").classList.add("sidebar-collapsed");
+  }
+
   const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   let idleTimer;
 
@@ -809,7 +883,7 @@
     currentApp = app;
     document.getElementById("nav-ticket").classList.toggle("active", app === "ticket");
     document.getElementById("nav-newhire").classList.toggle("active", app === "newhire");
-    document.querySelector("header h1").textContent = app === "ticket" ? "Ticket Deployments" : "New Hire Equipment";
+    document.getElementById("page-title").textContent = app === "ticket" ? "Ticket Deployments" : "New Hire Equipment";
     await loadData();
     currentTab = "active";
     switchTab("active");
