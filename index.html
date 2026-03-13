@@ -1301,7 +1301,7 @@
         const hasNotes = notesArr.length > 0;
         return `
           <tr data-section="${section.id}" data-row="${i}" class="${hasNotes ? 'has-notes-row' : ''}"">
-            <td style="white-space:nowrap;"><span class="editable outlined task-id cell-task" contenteditable="true" spellcheck="false">${row.task || ""}</span>${row.task ? `<a href="https://mayday.saronic.com/now/nav/ui/classic/params/target/sc_task_list.do%3Fsysparm_query%3Dnumber%3D${encodeURIComponent(row.task)}" target="_blank" title="Open in ServiceNow" style="margin-left:5px;color:#6366f1;text-decoration:none;font-size:0.75rem;opacity:0.6;transition:opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">↗</a>` : ""}</td>
+            <td style="white-space:nowrap;"><span class="editable outlined task-id cell-task" contenteditable="true" spellcheck="false">${row.task || ""}</span>${row.task ? `<a href="https://mayday.saronic.com/now/nav/ui/classic/params/target/sc_task.do%3Fsysparm_query%3Dnumber%3D${encodeURIComponent(row.task)}" target="_blank" title="Open in ServiceNow" style="margin-left:5px;color:#6366f1;text-decoration:none;font-size:0.75rem;opacity:0.6;transition:opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">↗</a>` : ""}</td>
             <td><span class="editable cell-name" contenteditable="true" spellcheck="false">${row.name || ""}</span></td>
             <td><select class="progress-select cell-progress" data-value="${row.progress || ""}" onchange="this.dataset.value=this.value; updateProgress('${section.id}', ${i}, this.value)">
               <option value="" ${!row.progress ? "selected" : ""}>Not Started</option>
