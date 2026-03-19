@@ -1108,7 +1108,6 @@
   }
 
   function completeRow(sectionId, rowIndex) {
-    launchConfetti();
     collectEdits();
     const section = data.sections.find(s => s.id === sectionId);
     const [row] = section.rows.splice(rowIndex, 1);
